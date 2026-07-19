@@ -469,26 +469,6 @@ button:disabled {
   margin-bottom: 12px;
 }
 
-.position-picker__buttons {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.position-picker__buttons button {
-  padding: 14px 22px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--text);
-  font-weight: 700;
-  font-size: 1rem;
-}
-
-.position-picker__buttons button:not(:disabled):hover {
-  border-color: var(--accent);
-}
-
 /* --- Roster court --- */
 
 .roster-court {
@@ -571,12 +551,44 @@ button:disabled {
   text-align: center;
   padding: 8px;
   border-radius: 10px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text);
+  font-family: inherit;
+  cursor: default;
+  opacity: 1;
+}
+
+.court__spot:disabled {
+  opacity: 1;
+  cursor: default;
 }
 
 .court__spot.filled {
   background: rgba(19, 26, 34, 0.9);
-  border: 1px solid var(--border);
+  border-color: var(--border);
   backdrop-filter: blur(2px);
+}
+
+.court__spot.clickable {
+  cursor: pointer;
+  background: rgba(79, 141, 253, 0.12);
+  border-color: var(--accent-blue);
+  animation: court-spot-pulse 1.6s ease-in-out infinite;
+}
+
+.court__spot.clickable:hover {
+  background: rgba(79, 141, 253, 0.22);
+}
+
+@keyframes court-spot-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(79, 141, 253, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(79, 141, 253, 0);
+  }
 }
 
 .court__spot-name {
@@ -588,6 +600,11 @@ button:disabled {
 .court__spot-name--empty {
   font-weight: 500;
   color: var(--text-dim);
+}
+
+.court__spot-name--pending {
+  font-weight: 700;
+  color: var(--accent-blue);
 }
 
 .court__spot-transplant {

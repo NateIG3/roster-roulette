@@ -1,4 +1,4 @@
-import { ATTRIBUTE_KEYS, ATTRIBUTE_LABELS, POSITIONS, POSITION_LABELS, type Position } from '../data/attributes';
+import { ATTRIBUTE_KEYS, ATTRIBUTE_LABELS, POSITION_LABELS } from '../data/attributes';
 import { PLAYERS_BY_ID } from '../data/players';
 import { resolveTransplant } from '../engine/transplant';
 import type { Option } from '../engine/spin';
@@ -10,10 +10,9 @@ interface PositionPickerProps {
   team: TeamSlot[];
   round: number;
   hardMode: boolean;
-  onAssign: (position: Position) => void;
 }
 
-export default function PositionPicker({ option, team, round, hardMode, onAssign }: PositionPickerProps) {
+export default function PositionPicker({ option, team, round, hardMode }: PositionPickerProps) {
   const base = PLAYERS_BY_ID[option.baseId];
   const donor = PLAYERS_BY_ID[option.donorId];
   const finalAttributes = resolveTransplant(option);
@@ -53,21 +52,8 @@ export default function PositionPicker({ option, team, round, hardMode, onAssign
           Only {POSITION_LABELS[available[0]]} is open — {base.name} is locked in there, like it or not.
         </p>
       ) : (
-        <p className="position-picker__prompt">Choose a position for {base.name}:</p>
+        <p className="position-picker__prompt">Click an open spot on the court below to place {base.name}.</p>
       )}
-
-      <div className="position-picker__buttons">
-        {POSITIONS.map((position) => (
-          <button
-            key={position}
-            type="button"
-            disabled={!available.includes(position)}
-            onClick={() => onAssign(position)}
-          >
-            {position}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }

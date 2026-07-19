@@ -17,13 +17,7 @@ export default function RoundScreen({ state, dispatch }: RoundScreenProps) {
     <div className="round-screen">
       <div className="round-screen__main">
         {pendingOption ? (
-          <PositionPicker
-            option={pendingOption}
-            team={team}
-            round={round}
-            hardMode={hardMode}
-            onAssign={(position) => dispatch({ type: 'ASSIGN_POSITION', position })}
-          />
+          <PositionPicker option={pendingOption} team={team} round={round} hardMode={hardMode} />
         ) : (
           <>
             <h2>Round {round} of 5 — spin and pick one</h2>
@@ -50,7 +44,12 @@ export default function RoundScreen({ state, dispatch }: RoundScreenProps) {
         )}
       </div>
 
-      <RosterCourt team={team} round={round} />
+      <RosterCourt
+        team={team}
+        round={round}
+        pendingOption={pendingOption}
+        onAssign={(position) => dispatch({ type: 'ASSIGN_POSITION', position })}
+      />
     </div>
   );
 }

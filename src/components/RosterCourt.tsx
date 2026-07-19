@@ -1,11 +1,15 @@
 import { ATTRIBUTE_LABELS, POSITIONS, type Position } from '../data/attributes';
 import { PLAYERS_BY_ID } from '../data/players';
+import type { Option } from '../engine/spin';
 import type { TeamSlot } from '../engine/scoring';
+import { availablePositions } from '../state/gameReducer';
 import PlayerAvatar from './PlayerAvatar';
 
 interface RosterCourtProps {
   team: TeamSlot[];
   round: number;
+  pendingOption?: Option | null;
+  onAssign?: (position: Position) => void;
 }
 
 // Percentage coordinates over the court SVG (viewBox 0 0 400 380), oriented
@@ -20,12 +24,17 @@ const COURT_SPOTS: Record<Position, { left: string; top: string }> = {
   C: { left: '50%', top: '88%' },
 };
 
-export default function RosterCourt({ team, round }: RosterCourtProps) {
+export default function RosterCourt({ team, round, pendingOption, onAssign }: RosterCourtProps) {
+  const openForPlacement = pendingOption ? availablePositions(team) : [];
+  const pendingBase = pendingOption ? PLAYERS_BY_ID[pendingOption.baseId] : null;
+
   return (
     <div className="roster-court">
       <div className="roster-court__header">
         <h3>Your Roster</h3>
-        <p className="roster-court__round">Round {round} of 5</p>
+        <p className="roster-court__round">
+          {pendingOption ? `Click an open spot to place ${pendingBase!.name}` : `Round ${round} of 5`}
+        </p>
       </div>
 
       <div className="court">
@@ -54,12 +63,16 @@ export default function RosterCourt({ team, round }: RosterCourtProps) {
           const spot = COURT_SPOTS[position];
           const base = slot ? PLAYERS_BY_ID[slot.option.baseId] : null;
           const donor = slot ? PLAYERS_BY_ID[slot.option.donorId] : null;
+          const clickable = !slot && openForPlacement.includes(position);
 
           return (
-            <div
+            <button
               key={position}
-              className={`court__spot${slot ? ' filled' : ' empty'}`}
+              type="button"
+              className={`court__spot${slot ? ' filled' : ' empty'}${clickable ? ' clickable' : ''}`}
               style={{ left: spot.left, top: spot.top }}
+              disabled={!clickable}
+              onClick={() => clickable && onAssign?.(position)}
             >
               <span className="position-tag">{position}</span>
               {base && donor && slot ? (
@@ -70,10 +83,12 @@ export default function RosterCourt({ team, round }: RosterCourtProps) {
                     +{ATTRIBUTE_LABELS[slot.option.attribute]} from {donor.name}
                   </span>
                 </>
+              ) : clickable ? (
+                <span className="court__spot-name court__spot-name--pending">Place here</span>
               ) : (
                 <span className="court__spot-name court__spot-name--empty">Open</span>
               )}
-            </div>
+            </button>
           );
         })}
       </div>
