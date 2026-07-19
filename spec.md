@@ -1,4 +1,4 @@
-# 82-0 Spin — Game Spec
+# Roster Roulette — Game Spec
 
 ## 1. Overview
 
@@ -13,7 +13,7 @@ No accounts, no backend, no persistence across sessions. Each playthrough is sel
 - Player/attribute data is a static local JSON file, not fetched from any API.
 
 ```
-82-0-spin/
+roster-roulette/
   src/
     data/
       players.ts          // curated roster + attributes
@@ -80,9 +80,8 @@ interface GameState {
 
 Hand-curated, authored directly in `data/players.ts`:
 
-- **Current tier**: every current NBA starting five (~150 players), rated 0-100 per attribute using publicly-known skill profiles as reference (comparable to how 2K-style ratings are derived — not sourced from any proprietary dataset).
-- **Legend tier**: a small set (~8-10) of all-time greats rated at their statistical/athletic prime (e.g., prime peak season), clearly flagged as historical so the player knows they're not facing a current-season version.
-- **Role tier**: a handful of known-but-unspectacular role players (bench-level or fringe starters) mixed into the spin pool, so recognizing a name isn't a guaranteed sign of quality — this is what makes the picks "ball knowledge" based rather than "always take the highest name recognition."
+- **Current tier**: current NBA players (~106 after curation), rated 0-100 per attribute using publicly-known skill profiles as reference (comparable to how 2K-style ratings are derived — not sourced from any proprietary dataset). Curated to well-known names and players with a clear standout specialty (~80+ in something) rather than every starter — generic mid-all-rounders were cut even if they technically start, so a name being in the pool isn't itself a signal of star power.
+- **Legend tier**: a small set (10) of all-time greats rated at their statistical/athletic prime (e.g., prime peak season), clearly flagged as historical so the player knows they're not facing a current-season version.
 
 This file is authored once as part of implementation; it is not part of this spec document.
 
@@ -193,7 +192,7 @@ No stat breakdown/radar chart in v1 (explicitly kept minimal per your call).
 
 ## 12. Build Phases
 
-1. Data: author `players.ts` roster (curated set across current/legend/role tiers).
+1. Data: author `players.ts` roster (curated set across current/legend tiers).
 2. Engine: option generation, transplant resolution, scoring formula — unit-testable in isolation from UI.
 3. State machine: `gameReducer` covering the full flow in §5.
 4. UI: Start → Round (reels + respins + position picker) → Results, wired to the reducer.

@@ -10,12 +10,12 @@ export default function StartScreen({ dispatch }: StartScreenProps) {
 
   return (
     <div className="start-screen">
-      <h1>82-0 Spin</h1>
+      <h1>Roster Roulette</h1>
       <p>
-        Draft a 5-man lineup from every current NBA starter, a handful of legends in their prime, and a few
-        deep-cut role players. Each round you'll spin two possible picks — a base player with one attribute
-        swapped out for a donor player's rating in that category. Choose your combo, drop them into a
-        position, and see how close your team gets to a perfect 82-0 season.
+        Draft a 5-man lineup from known current NBA starters and specialists, plus a handful of legends in
+        their prime. Each round you'll spin two possible picks — a base player with one attribute swapped
+        out for a donor player's rating in that category. Choose your combo, drop them into a position, and
+        see how close your team gets to a perfect 82-0 season.
       </p>
       <ul className="start-screen__rules">
         <li>5 rounds, 5 positions — each position filled exactly once.</li>
