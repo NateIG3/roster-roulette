@@ -7,7 +7,7 @@ import {
   type AttributeKey,
   type Position,
 } from '../data/attributes';
-import { PLAYERS_BY_ID } from '../data/players';
+import { PLAYERS_BY_ID, STAR_PLAYER_IDS } from '../data/players';
 import type { Option } from './spin';
 
 export interface TeamSlot {
@@ -63,33 +63,35 @@ function stdDev(values: number[]): number {
   return Math.sqrt(average(values.map((v) => (v - mean) ** 2)));
 }
 
-// A "mythical" combo: the donor's value in the transplanted category is
-// elite in its own right AND represents a huge swing up from what the base
-// player natively rated there — the surprising, larger-than-life pairings
-// (a small guard suddenly playing with a 7-footer's frame) rather than just
-// a good stat on a good player. Verified against real examples: Jalen
-// Brunson + Wembanyama's Build (88, up from Brunson's own 55) qualifies;
-// swapping in an elite stat a player was already strong in (e.g. SGA +
-// Jokić's playmaking, only a modest swing since SGA is already a plus
-// playmaker) does not.
+// An exceptional combo: ALL of (a) the base player is a genuine, unmistakable
+// star (see STAR_PLAYER_IDS — a much higher bar than "good specialist"),
+// (b) they're playing their natural position, no fit compromise, and
+// (c) the transplanted attribute is elite in its own right and a huge swing
+// up from what the player natively rated there. All three gates matter: a
+// merely good/known role player (Isaiah Hartenstein, Duncan Robinson) never
+// qualifies no matter how big the stat swing; neither does a star playing
+// out of position, or a modest stat bump. This is deliberately rare.
 const MYTHICAL_DONOR_THRESHOLD = 85;
 const MYTHICAL_SWING_THRESHOLD = 25;
-const MYTHICAL_BONUS = 3;
+const MYTHICAL_BONUS = 4;
 
-export function isMythicalOption(option: Option): boolean {
-  const base = PLAYERS_BY_ID[option.baseId];
-  const donor = PLAYERS_BY_ID[option.donorId];
-  const donorValue = donor.attributes[option.attribute];
-  const swing = donorValue - base.attributes[option.attribute];
+export function isMythicalSlot(slot: TeamSlot): boolean {
+  const base = PLAYERS_BY_ID[slot.option.baseId];
+  if (!STAR_PLAYER_IDS.has(base.id)) return false;
+  if (base.naturalPosition !== slot.position) return false;
+
+  const donor = PLAYERS_BY_ID[slot.option.donorId];
+  const donorValue = donor.attributes[slot.option.attribute];
+  const swing = donorValue - base.attributes[slot.option.attribute];
   return donorValue >= MYTHICAL_DONOR_THRESHOLD && swing >= MYTHICAL_SWING_THRESHOLD;
 }
 
 function mythicalSlotsIn(team: TeamSlot[]): TeamSlot[] {
-  return team.filter((slot) => isMythicalOption(slot.option));
+  return team.filter(isMythicalSlot);
 }
 
 // Step 3: Team Power Score — average slot score, plus a bonus for having no
-// team-wide gaps and for any mythical combos, minus a penalty for
+// team-wide gaps and for any exceptional combos, minus a penalty for
 // lopsided/redundant attribute coverage.
 function teamPowerScore(team: TeamSlot[], mythicalSlots: TeamSlot[]): number {
   const slotScores = team.map(slotScore);
@@ -113,13 +115,10 @@ function teamPowerScore(team: TeamSlot[], mythicalSlots: TeamSlot[]): number {
 // transplant) lands around TPS 66 -> ~70-72 wins — solidly in "well thought
 // out, a little lucky" territory, clearly ahead of random — and a
 // near-optimal build (elite two-way stars, best-in-pool donor swaps) reaches
-// TPS ~90, comfortably past the practical ceiling — verified there's enough
-// slack that a team with one real imperfection (one player forced off natural
-// position, one merely-good starter instead of a legend, or one so-so donor
-// pick) still clears 82-0; it doesn't require literal perfection in all 5
-// slots. No separate wins floor here — skill is meant to matter, so bad TPS
-// is allowed to fall further than a flat floor would allow; the hard cap
-// below still stops any single flaw from being humiliating on its own.
+// TPS ~90, comfortably past the practical ceiling. No separate wins floor
+// here — skill is meant to matter, so bad TPS is allowed to fall further
+// than a flat floor would allow; the hard caps below still stop a single
+// flaw (or a total absence of exceptional combos) from being papered over.
 const TPS_FLOOR = 22;
 const TPS_CEILING = 77;
 const CURVE_EXPONENT = 0.6;
@@ -130,16 +129,25 @@ function winsFromScore(tps: number): number {
   return Math.round(Math.min(82, Math.max(0, raw)));
 }
 
-// Step 5: fatal-flaw hard cap. A single slot whose position-relevant
-// attributes (the ones that actually matter at that position) fall below a
-// floor caps the whole team's max wins, regardless of how good the rest of
-// the roster is — one exploitable hole is enough to lose winnable games.
-// Thresholds are intentionally strict (only real position disasters trigger
-// them) and the caps themselves stay in "bad, not humiliating" territory.
+// Step 5: hard caps.
+//
+// Fatal-flaw cap: a single slot whose position-relevant attributes (the ones
+// that actually matter at that position) fall below a floor caps the whole
+// team's max wins, regardless of how good the rest of the roster is — one
+// exploitable hole is enough to lose winnable games. Thresholds are strict
+// (only real position disasters trigger them).
+//
+// No-mythical cap: a perfect 82-0 season requires at least one exceptional
+// combo (see isMythicalSlot) — a team built entirely from solid-but-
+// unremarkable picks is a good team, not an undefeated one. With exactly one
+// exceptional combo, reaching 82-0 is still rare in practice: the bonus it
+// grants often isn't enough on its own to clear the ceiling unless the rest
+// of the roster is also excellent. Two or more meaningfully closes that gap.
 const SEVERE_FLOOR = 35;
 const SEVERE_CAP = 40;
 const FATAL_FLOOR = 45;
 const FATAL_CAP = 62;
+const NO_MYTHICAL_CAP = 81;
 
 function positionRelevantAverage(slot: TeamSlot): number {
   const weights = POSITION_ATTRIBUTE_WEIGHTS[slot.position];
@@ -149,7 +157,11 @@ function positionRelevantAverage(slot: TeamSlot): number {
   return average(topKeys.map((key) => slot.finalAttributes[key]));
 }
 
-function applyHardCap(team: TeamSlot[], wins: number): { wins: number; cappedBy: TeamSlot | null } {
+function applyHardCap(
+  team: TeamSlot[],
+  wins: number,
+  mythicalSlots: TeamSlot[],
+): { wins: number; cappedBy: TeamSlot | null } {
   let cap = 82;
   let cappedBy: TeamSlot | null = null;
   for (const slot of team) {
@@ -161,6 +173,9 @@ function applyHardCap(team: TeamSlot[], wins: number): { wins: number; cappedBy:
       cap = FATAL_CAP;
       cappedBy = slot;
     }
+  }
+  if (mythicalSlots.length === 0 && NO_MYTHICAL_CAP < cap) {
+    cap = NO_MYTHICAL_CAP;
   }
   return { wins: Math.min(wins, cap), cappedBy: wins > cap ? cappedBy : null };
 }
@@ -179,12 +194,7 @@ function playerName(slot: TeamSlot): string {
   return PLAYERS_BY_ID[slot.option.baseId].name;
 }
 
-function buildExplanation(
-  team: TeamSlot[],
-  wins: number,
-  cappedBy: TeamSlot | null,
-  mythicalSlots: TeamSlot[],
-): string {
+function buildExplanation(team: TeamSlot[], wins: number, cappedBy: TeamSlot | null): string {
   const losses = 82 - wins;
   const slotScores = team.map((slot) => ({ slot, score: slotScore(slot) }));
   const best = slotScores.reduce((a, b) => (b.score > a.score ? b : a));
@@ -206,13 +216,6 @@ function buildExplanation(
     body = `${playerName(best.slot)}'s ${strongAttr.toLowerCase()} carried this roster, but ${playerName(worst.slot)}'s ${weakAttr.toLowerCase()} at ${weakPos} left just enough cracks to cost winnable games.`;
   }
 
-  if (mythicalSlots.length > 0) {
-    const m = mythicalSlots[0];
-    const donorName = PLAYERS_BY_ID[m.option.donorId].name;
-    const attr = ATTRIBUTE_LABELS[m.option.attribute].toLowerCase();
-    body += ` ${playerName(m)} playing with ${donorName}'s mythical ${attr} was such a mismatch it padded the record on its own.`;
-  }
-
   return `${body} Final record: ${wins}-${losses}.`;
 }
 
@@ -220,8 +223,8 @@ export function gradeTeam(team: TeamSlot[]): GradeResult {
   const mythicalSlots = mythicalSlotsIn(team);
   const tps = teamPowerScore(team, mythicalSlots);
   const rawWins = winsFromScore(tps);
-  const { wins, cappedBy } = applyHardCap(team, rawWins);
-  const explanation = buildExplanation(team, wins, cappedBy, mythicalSlots);
+  const { wins, cappedBy } = applyHardCap(team, rawWins, mythicalSlots);
+  const explanation = buildExplanation(team, wins, cappedBy);
 
   return {
     wins,

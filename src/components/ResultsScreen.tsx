@@ -33,7 +33,11 @@ export default function ResultsScreen({ state, dispatch }: ResultsScreenProps) {
                 <strong>{base.name}</strong> <span className="reel-joiner reel-joiner--inline">with</span>{' '}
                 <strong>{donor.name}'s</strong> {ATTRIBUTE_LABELS[slot.option.attribute]}
               </span>
-              {mythical && <span className="mythical-inline-badge">★ Mythical</span>}
+              {mythical && (
+                <span className="results-screen__standout-mark" title="An exceptional combo">
+                  ✦
+                </span>
+              )}
             </li>
           );
         })}

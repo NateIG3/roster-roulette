@@ -218,3 +218,52 @@ export const PLAYERS: Player[] = [
 export const PLAYERS_BY_ID: Record<string, Player> = Object.fromEntries(
   PLAYERS.map((pl) => [pl.id, pl]),
 );
+
+// The genuinely top-tier, unmistakably famous names — MVP-caliber current
+// stars and every legend (legends are all prime-era all-timers by
+// definition). Deliberately a short list: known specialists and very good
+// role players (e.g. Isaiah Hartenstein, Duncan Robinson) are excluded on
+// purpose, since "everyone recognizes this guy and he's excellent" is a much
+// higher bar than "this guy is good at one thing."
+export const STAR_PLAYER_IDS = new Set<string>([
+  'nikola-jokic',
+  'giannis-antetokounmpo',
+  'luka-doncic',
+  'shai-gilgeous-alexander',
+  'lebron-james',
+  'kevin-durant',
+  'stephen-curry',
+  'joel-embiid',
+  'victor-wembanyama',
+  'jayson-tatum',
+  'anthony-edwards',
+  'devin-booker',
+  'kawhi-leonard',
+  'jimmy-butler',
+  'donovan-mitchell',
+  'trae-young',
+  'ja-morant',
+  'zion-williamson',
+  'tyrese-haliburton',
+  'jalen-brunson',
+  'domantas-sabonis',
+  'de-aaron-fox',
+  'james-harden',
+  'anthony-davis',
+  'karl-anthony-towns',
+  'paul-george',
+  'demar-derozan',
+  'kyrie-irving',
+  'paolo-banchero',
+  // legends — every prime-era all-timer counts
+  'michael-jordan-prime',
+  'magic-johnson-prime',
+  'larry-bird-prime',
+  'shaquille-oneal-prime',
+  'kobe-bryant-prime',
+  'tim-duncan-prime',
+  'allen-iverson-prime',
+  'hakeem-olajuwon-prime',
+  'julius-erving-prime',
+  'karl-malone-prime',
+]);

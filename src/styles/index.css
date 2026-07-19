@@ -198,39 +198,6 @@ button:disabled {
   overflow-x: auto;
 }
 
-.option-card--mythical {
-  border-color: var(--accent-gold);
-  box-shadow: 0 0 0 1px var(--accent-gold), 0 0 24px rgba(245, 185, 66, 0.25);
-}
-
-.option-card__mythical-badge {
-  position: absolute;
-  top: -11px;
-  left: 20px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--accent-gold);
-  color: #2a1c00;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.mythical-inline-badge {
-  display: inline-block;
-  margin-left: 10px;
-  padding: 2px 9px;
-  border-radius: 999px;
-  background: var(--accent-gold);
-  color: #2a1c00;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  vertical-align: middle;
-}
-
 .reel-joiner {
   flex-shrink: 0;
   color: var(--text-dim);
@@ -687,6 +654,13 @@ button:disabled {
 
 .results-screen__combo strong {
   color: var(--text);
+}
+
+.results-screen__standout-mark {
+  margin-left: auto;
+  color: var(--accent-gold);
+  font-size: 0.9rem;
+  cursor: default;
 }
 
 .results-screen__play-again {
