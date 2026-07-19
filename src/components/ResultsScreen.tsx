@@ -25,6 +25,7 @@ export default function ResultsScreen({ state, dispatch }: ResultsScreenProps) {
           const slot = team.find((s) => s.position === position)!;
           const base = PLAYERS_BY_ID[slot.option.baseId];
           const donor = PLAYERS_BY_ID[slot.option.donorId];
+          const mythical = result.mythicalSlots.some((s) => s.position === position);
           return (
             <li key={position}>
               <span className="position-tag">{position}</span>
@@ -32,6 +33,7 @@ export default function ResultsScreen({ state, dispatch }: ResultsScreenProps) {
                 <strong>{base.name}</strong> <span className="reel-joiner reel-joiner--inline">with</span>{' '}
                 <strong>{donor.name}'s</strong> {ATTRIBUTE_LABELS[slot.option.attribute]}
               </span>
+              {mythical && <span className="mythical-inline-badge">★ Mythical</span>}
             </li>
           );
         })}

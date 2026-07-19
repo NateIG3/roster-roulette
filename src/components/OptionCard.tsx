@@ -1,4 +1,5 @@
 import { PLAYERS_BY_ID } from '../data/players';
+import { isMythicalOption } from '../engine/scoring';
 import type { Option, ReelSlot } from '../engine/spin';
 import PlayerReelBox from './PlayerReelBox';
 import AttributeReelBox from './AttributeReelBox';
@@ -16,9 +17,11 @@ export default function OptionCard({ option, respinsRemaining, hardMode, onRespi
   const donor = PLAYERS_BY_ID[option.donorId];
   const donorValue = donor.attributes[option.attribute];
   const canRespin = respinsRemaining > 0;
+  const mythical = !hardMode && isMythicalOption(option);
 
   return (
-    <div className="option-card">
+    <div className={`option-card${mythical ? ' option-card--mythical' : ''}`}>
+      {mythical && <span className="option-card__mythical-badge">★ Mythical</span>}
       <PlayerReelBox
         player={base}
         spinToken={option.baseId}

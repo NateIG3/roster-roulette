@@ -4,18 +4,21 @@ const SEQUENCE_LENGTH = 10;
 
 interface ReelSpinState<T> {
   spinning: boolean;
-  sequence: T[]; // while spinning: candidates ending in the settled value; while idle: [settled value]
+  sequence: T[]; // while spinning: settled value first, then scrolling candidates; while idle: [settled value]
   duration: number; // ms, only meaningful while spinning
 }
 
+// The settled value sits at the top of the column (index 0) and the reel
+// animates from the bottom of the column up to translateY(0), so the visible
+// motion reads as scrolling downward — candidates fall in from the top and
+// the final value settles in from above, rather than flying up and out.
 function buildSpinningState<T>(finalValue: T, pool: T[]): ReelSpinState<T> {
   const duration = 1200 + Math.random() * 1800;
-  const sequence: T[] = Array.from(
+  const candidates: T[] = Array.from(
     { length: SEQUENCE_LENGTH - 1 },
     () => pool[Math.floor(Math.random() * pool.length)],
   );
-  sequence.push(finalValue);
-  return { spinning: true, sequence, duration };
+  return { spinning: true, sequence: [finalValue, ...candidates], duration };
 }
 
 /** Drives a real scrolling slot-reel: while spinning, a column of random pool

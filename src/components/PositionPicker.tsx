@@ -2,7 +2,7 @@ import { ATTRIBUTE_KEYS, ATTRIBUTE_LABELS, POSITIONS, POSITION_LABELS, type Posi
 import { PLAYERS_BY_ID } from '../data/players';
 import { resolveTransplant } from '../engine/transplant';
 import type { Option } from '../engine/spin';
-import type { TeamSlot } from '../engine/scoring';
+import { isMythicalOption, type TeamSlot } from '../engine/scoring';
 import { availablePositions } from '../state/gameReducer';
 
 interface PositionPickerProps {
@@ -19,6 +19,7 @@ export default function PositionPicker({ option, team, round, hardMode, onAssign
   const finalAttributes = resolveTransplant(option);
   const available = availablePositions(team);
   const forced = available.length === 1;
+  const mythical = !hardMode && isMythicalOption(option);
 
   return (
     <div className="position-picker">
@@ -26,6 +27,7 @@ export default function PositionPicker({ option, team, round, hardMode, onAssign
       <p className="position-picker__combo">
         {base.name} <span className="reel-joiner reel-joiner--inline">with</span> {donor.name}'s{' '}
         {ATTRIBUTE_LABELS[option.attribute]}
+        {mythical && <span className="mythical-inline-badge">★ Mythical</span>}
       </p>
 
       {hardMode ? (

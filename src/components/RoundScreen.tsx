@@ -2,7 +2,7 @@ import type { Dispatch } from 'react';
 import type { Action, GameState } from '../state/gameReducer';
 import OptionCard from './OptionCard';
 import PositionPicker from './PositionPicker';
-import TeamSidebar from './TeamSidebar';
+import RosterCourt from './RosterCourt';
 
 interface RoundScreenProps {
   state: GameState;
@@ -15,7 +15,6 @@ export default function RoundScreen({ state, dispatch }: RoundScreenProps) {
 
   return (
     <div className="round-screen">
-      <TeamSidebar team={team} round={round} />
       <div className="round-screen__main">
         {pendingOption ? (
           <PositionPicker
@@ -50,6 +49,8 @@ export default function RoundScreen({ state, dispatch }: RoundScreenProps) {
           </>
         )}
       </div>
+
+      <RosterCourt team={team} round={round} />
     </div>
   );
 }

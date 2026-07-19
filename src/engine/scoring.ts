@@ -22,6 +22,7 @@ export interface GradeResult {
   teamPowerScore: number;
   explanation: string;
   cappedBy: TeamSlot | null;
+  mythicalSlots: TeamSlot[];
 }
 
 const TRANSPLANT_WEIGHT = 3;
@@ -62,9 +63,35 @@ function stdDev(values: number[]): number {
   return Math.sqrt(average(values.map((v) => (v - mean) ** 2)));
 }
 
+// A "mythical" combo: the donor's value in the transplanted category is
+// elite in its own right AND represents a huge swing up from what the base
+// player natively rated there — the surprising, larger-than-life pairings
+// (a small guard suddenly playing with a 7-footer's frame) rather than just
+// a good stat on a good player. Verified against real examples: Jalen
+// Brunson + Wembanyama's Build (88, up from Brunson's own 55) qualifies;
+// swapping in an elite stat a player was already strong in (e.g. SGA +
+// Jokić's playmaking, only a modest swing since SGA is already a plus
+// playmaker) does not.
+const MYTHICAL_DONOR_THRESHOLD = 85;
+const MYTHICAL_SWING_THRESHOLD = 25;
+const MYTHICAL_BONUS = 3;
+
+export function isMythicalOption(option: Option): boolean {
+  const base = PLAYERS_BY_ID[option.baseId];
+  const donor = PLAYERS_BY_ID[option.donorId];
+  const donorValue = donor.attributes[option.attribute];
+  const swing = donorValue - base.attributes[option.attribute];
+  return donorValue >= MYTHICAL_DONOR_THRESHOLD && swing >= MYTHICAL_SWING_THRESHOLD;
+}
+
+function mythicalSlotsIn(team: TeamSlot[]): TeamSlot[] {
+  return team.filter((slot) => isMythicalOption(slot.option));
+}
+
 // Step 3: Team Power Score — average slot score, plus a bonus for having no
-// team-wide gaps, minus a penalty for lopsided/redundant attribute coverage.
-function teamPowerScore(team: TeamSlot[]): number {
+// team-wide gaps and for any mythical combos, minus a penalty for
+// lopsided/redundant attribute coverage.
+function teamPowerScore(team: TeamSlot[], mythicalSlots: TeamSlot[]): number {
   const slotScores = team.map(slotScore);
   const baseAverage = average(slotScores);
 
@@ -75,7 +102,7 @@ function teamPowerScore(team: TeamSlot[]): number {
   const balanceBonus = Math.max(0, (minAttr - 50) * 0.15);
   const redundancyPenalty = stdDev(teamAttrAvg) * 0.35;
 
-  return baseAverage + balanceBonus - redundancyPenalty;
+  return baseAverage + balanceBonus - redundancyPenalty + mythicalSlots.length * MYTHICAL_BONUS;
 }
 
 // Step 4: mapping from TPS to a win total.
@@ -152,7 +179,12 @@ function playerName(slot: TeamSlot): string {
   return PLAYERS_BY_ID[slot.option.baseId].name;
 }
 
-function buildExplanation(team: TeamSlot[], wins: number, cappedBy: TeamSlot | null): string {
+function buildExplanation(
+  team: TeamSlot[],
+  wins: number,
+  cappedBy: TeamSlot | null,
+  mythicalSlots: TeamSlot[],
+): string {
   const losses = 82 - wins;
   const slotScores = team.map((slot) => ({ slot, score: slotScore(slot) }));
   const best = slotScores.reduce((a, b) => (b.score > a.score ? b : a));
@@ -165,22 +197,31 @@ function buildExplanation(team: TeamSlot[], wins: number, cappedBy: TeamSlot | n
   const strongPos = POSITION_LABELS[best.slot.position];
   const weakPos = POSITION_LABELS[worst.slot.position];
 
+  let body: string;
   if (wins >= 82) {
-    return `Every slot graded elite with no exploitable weakness — ${strongAttr.toLowerCase()} out of the ${strongPos} spot and airtight play everywhere else meant this team simply had no bad matchups. Final record: 82-0.`;
+    body = `Every slot graded elite with no exploitable weakness — ${strongAttr.toLowerCase()} out of the ${strongPos} spot and airtight play everywhere else meant this team simply had no bad matchups.`;
+  } else if (cappedBy) {
+    body = `${playerName(worst.slot)} at ${weakPos} couldn't hold up on ${weakAttr.toLowerCase()}, and that one hole got exploited across all 82 games no matter how good the rest of the roster was.`;
+  } else {
+    body = `${playerName(best.slot)}'s ${strongAttr.toLowerCase()} carried this roster, but ${playerName(worst.slot)}'s ${weakAttr.toLowerCase()} at ${weakPos} left just enough cracks to cost winnable games.`;
   }
 
-  if (cappedBy) {
-    return `${playerName(worst.slot)} at ${weakPos} couldn't hold up on ${weakAttr.toLowerCase()}, and that one hole got exploited across all 82 games no matter how good the rest of the roster was. Final record: ${wins}-${losses}.`;
+  if (mythicalSlots.length > 0) {
+    const m = mythicalSlots[0];
+    const donorName = PLAYERS_BY_ID[m.option.donorId].name;
+    const attr = ATTRIBUTE_LABELS[m.option.attribute].toLowerCase();
+    body += ` ${playerName(m)} playing with ${donorName}'s mythical ${attr} was such a mismatch it padded the record on its own.`;
   }
 
-  return `${playerName(best.slot)}'s ${strongAttr.toLowerCase()} carried this roster, but ${playerName(worst.slot)}'s ${weakAttr.toLowerCase()} at ${weakPos} left just enough cracks to cost winnable games. Final record: ${wins}-${losses}.`;
+  return `${body} Final record: ${wins}-${losses}.`;
 }
 
 export function gradeTeam(team: TeamSlot[]): GradeResult {
-  const tps = teamPowerScore(team);
+  const mythicalSlots = mythicalSlotsIn(team);
+  const tps = teamPowerScore(team, mythicalSlots);
   const rawWins = winsFromScore(tps);
   const { wins, cappedBy } = applyHardCap(team, rawWins);
-  const explanation = buildExplanation(team, wins, cappedBy);
+  const explanation = buildExplanation(team, wins, cappedBy, mythicalSlots);
 
   return {
     wins,
@@ -188,5 +229,6 @@ export function gradeTeam(team: TeamSlot[]): GradeResult {
     teamPowerScore: tps,
     explanation,
     cappedBy,
+    mythicalSlots,
   };
 }
