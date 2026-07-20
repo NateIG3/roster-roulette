@@ -25,7 +25,7 @@ export type Action =
   | { type: 'PLAY_AGAIN' };
 
 export const TOTAL_ROUNDS = 5;
-export const TOTAL_RESPINS = 2;
+export const TOTAL_RESPINS = 3;
 
 export const INITIAL_STATE: GameState = {
   screen: 'start',

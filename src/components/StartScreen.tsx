@@ -19,7 +19,7 @@ export default function StartScreen({ dispatch }: StartScreenProps) {
       </p>
       <ul className="start-screen__rules">
         <li>5 rounds, 5 positions — each position filled exactly once.</li>
-        <li>2 respins for the whole game — just click a box to respin it, any round.</li>
+        <li>3 respins for the whole game — just click a box to respin it, any round.</li>
         <li>The grading formula is fixed and unforgiving — you'll need real ball knowledge to get close to 82-0.</li>
       </ul>
 
